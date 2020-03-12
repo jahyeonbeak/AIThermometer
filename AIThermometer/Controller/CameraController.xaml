@@ -1,0 +1,45 @@
+﻿<UserControl x:Class="AIThermometer.CameraController"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AIThermometer"
+             mc:Ignorable="d" 
+             d:DesignHeight="111" d:DesignWidth="323"  Background="#222327" >
+
+    <Grid x:Name="mainGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="46"></RowDefinition>
+            <RowDefinition x:Name="btnPanel" Height="64"></RowDefinition>
+            <RowDefinition Height="1"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid Height="46" Width="323" Margin="0,0" VerticalAlignment="Top" Grid.Row="0">
+            <Image Source="/image/camera.png" x:Name="image" Width="20" Height="20" Margin="30,10,0,10" HorizontalAlignment="Left" VerticalAlignment="Center"  />
+            <Label FontSize="14" Content="摄像头01" x:Name="cameraName" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="#ffffff" Margin="65,10"></Label>
+            <Button x:Name="settingButton"  Width="20" Height="20" Margin="0,10,40,10" HorizontalAlignment="Right" VerticalAlignment="Center" Click="SettingButton_Click" Style="{DynamicResource MyButton}">
+                <Button.Background>
+                    <ImageBrush ImageSource="/image/up.png"></ImageBrush>
+                </Button.Background>
+            </Button>
+        </Grid>
+        <Grid Height="65" Grid.Row="1">
+            <Label Height="1" x:Name="label1" Width="270" VerticalAlignment="Top" Background="#303238"></Label>
+            <Button x:Name="contectButton" Click="contectButton_Click"  Height="30" Width="75" Background="#3f4044" Margin="120,18,128,17" Style="{DynamicResource MyButton}">
+                <WrapPanel Height="30" Width="75">
+                    <Image Height="20" Width="20" Margin="5,5" Source="/image/duan.png"/>
+                    <TextBlock TextWrapping="Wrap" Text="断开" Width="40" FontSize="14" VerticalAlignment="Center" Padding="5,0,0,0" Foreground="#ffffff"/>
+                </WrapPanel>
+            </Button>
+            <Button  Height="30" x:Name="update" Width="75" Background="#1890ff" Margin="221,18,27,17" Click="Update_Click" Style="{DynamicResource MyButton}">
+                <WrapPanel Height="30" Width="75">
+                    <Image Height="20" Width="20" Margin="5,5" Source="/image/repair.png"/>
+                    <TextBlock TextWrapping="Wrap" Text="修改" Width="40" FontSize="14" VerticalAlignment="Center" Padding="5,0,0,0"  Foreground="#ffffff"/>
+                </WrapPanel>
+            </Button>
+
+        </Grid>
+        <Grid Grid.Row="2">
+            <Label Height="1" x:Name="label2"  Width="323"  Background="#303238"></Label>
+        </Grid>
+    </Grid>
+</UserControl>

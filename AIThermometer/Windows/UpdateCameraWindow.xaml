@@ -1,0 +1,48 @@
+﻿<Window x:Class="AIThermometer.Windows.UpdateCameraWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AIThermometer.Windows"
+        mc:Ignorable="d"
+        Title="AddCameraWindow" Height="420" Width="442" WindowStyle="None" 
+        AllowsTransparency="True" Background="Transparent" 
+        OpacityMask="White" ResizeMode="NoResize" KeyDown="Window_KeyDown">
+
+    <Grid Background="Transparent">
+        <Border BorderThickness="0" CornerRadius="4,4,4,4"    Background="#222327">
+            <Grid>
+                <Label Content="修改摄像头" x:Name="title" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,10,0,0" FontSize="16"  Foreground="#ffffff"/>
+                <!--<Button HorizontalAlignment="Right" VerticalAlignment="Top" Height="15" Width="15" Margin="0,20,20,0" BorderThickness="0">
+                    <Button.Background>
+                        <ImageBrush ImageSource="/image/close.png"></ImageBrush>
+                    </Button.Background>
+                </Button>-->
+                <Label Height="2" Width="442" Background="#313238" VerticalAlignment="Top" Margin="0,50"></Label>
+                <Label Content="IP地址:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,80,0,0" FontSize="14" Foreground="#ffffff"/>
+                <TextBox Width="220" Height="26" x:Name="ip" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="135,80,0,0"  Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" IsEnabled="False"></TextBox>
+                <Label Content="黑体温度:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="45,160,0,0" FontSize="14" Foreground="#ffffff"/>
+                <TextBox Width="220" Height="26" HorizontalAlignment="Left"  x:Name="balckTemp" VerticalAlignment="Top" Margin="135,160,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" ></TextBox>
+                <Label Content="报警地址:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="45,200,0,0" FontSize="14" Foreground="#ffffff"/>
+                <TextBox Width="220" Height="26" HorizontalAlignment="Left"  x:Name="address" VerticalAlignment="Top" Margin="135,200,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" ></TextBox>
+
+                <Label Height="2" Width="442" Background="#313238" VerticalAlignment="Top" Margin="0,520,0,0"></Label>
+                <Button x:Name="cancel" Content="取消" HorizontalAlignment="Right" Width="75" Height="30" Margin="0,0,114,30" VerticalAlignment="Bottom" Click="Cancel_Click" Background="#FF404145" FontSize="14" Foreground="White" Style="{DynamicResource MyButton}"/>
+                <Button x:Name="confirm" Content="确认" HorizontalAlignment="Right" Width="75" Height="30" Margin="0,0,19,30" VerticalAlignment="Bottom" Click="okButton_Click" Background="#FF1890FF" FontSize="14" Foreground="White" Style="{DynamicResource MyButton}"/>
+                <Label Content="设备ID:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,120,0,0" FontSize="14" Foreground="#ffffff"/>
+                <TextBox Width="220" Height="26" x:Name="device" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="135,120,0,0"  Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" />
+                <Label Content="设备报警阈值:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="18,240,0,0" FontSize="14" Foreground="#ffffff"/>
+                <TextBox Width="220" Height="26" HorizontalAlignment="Left"  x:Name="camera_warn_limit" VerticalAlignment="Top" Margin="135,240,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" />
+                <TextBox Width="220" Height="26" HorizontalAlignment="Left"  x:Name="face_limit" VerticalAlignment="Top" Margin="135,280,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" />
+                <TextBox Width="220" Height="26" HorizontalAlignment="Left"  x:Name="face_score" VerticalAlignment="Top" Margin="135,320,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" />
+                <Label Content="最小人脸阈值:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="18,280,0,0" FontSize="14" Foreground="#ffffff"/>
+                <Label Content="可信度阈值:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="32,320,0,0" FontSize="14" Foreground="#ffffff"/>
+            </Grid>
+        </Border>
+
+
+
+
+
+    </Grid>
+</Window>

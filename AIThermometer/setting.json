@@ -1,0 +1,9 @@
+{
+  "language": null,
+  "local_port": 11000,
+  "local_url": "",
+  "temp_limit": 37.0,
+  "warning_bar_length": 10,
+  "camera_auto_start": true,
+  "clean_day" : 30
+}

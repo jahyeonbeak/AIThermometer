@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="AIThermometer.Windows.VlcWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AIThermometer.Windows"
+        xmlns:wpf="clr-namespace:Vlc.DotNet.Wpf;assembly=Vlc.DotNet.Wpf"
+        mc:Ignorable="d"
+        Height="300" Width="300">
+    <Grid x:Name="mainGrid">
+        <StackPanel Orientation="Horizontal">
+            <StackPanel x:Name="v1">
+            </StackPanel>
+            <StackPanel x:Name="v2">
+            </StackPanel>
+        </StackPanel>
+        <!--<wpf:VlcControl x:Name="vlcPlayer" />-->
+    </Grid>
+</UserControl>
