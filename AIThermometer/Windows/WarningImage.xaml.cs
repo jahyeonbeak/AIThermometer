@@ -22,6 +22,7 @@ namespace AIThermometer.Windows
     public partial class WarningImage : UserControl
     {
         private float redTemp = AIThermometerAPP.Instance().config.temp_limit;
+        public int id = 0;
         public WarningImage(TempMessage tm)
         {
             InitializeComponent();
@@ -32,14 +33,15 @@ namespace AIThermometer.Windows
 
         public void Init(TempMessage tm)
         {
+            id = tm.id;
             BitmapImage myBitmapImage = new BitmapImage();
             myBitmapImage.BeginInit();
             myBitmapImage.StreamSource = new MemoryStream(tm.bytes);
             myBitmapImage.EndInit();
             image.Source = myBitmapImage;
-            cam_name.Content = "设备名称：" + tm.cam;
-            temp.Content = "体温:" + tm.temp;
-            date.Content = "测温时间:" + tm.date;
+            cam_name.Content = Application.Current.FindResource("deviceName").ToString() + tm.cam;
+            temp.Content = Application.Current.FindResource("devicetemp").ToString() + tm.temp;
+            date.Content = Application.Current.FindResource("tempTime").ToString() + tm.date;
             if (tm.temp > redTemp)
             {
                 redImage.Visibility = Visibility.Visible;

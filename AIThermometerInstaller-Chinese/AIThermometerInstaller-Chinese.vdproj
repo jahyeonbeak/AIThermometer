@@ -3,10 +3,10 @@
 "VSVersion" = "3:800"
 "ProjectType" = "8:{978C614F-708E-4E1A-B201-565925725DBA}"
 "IsWebType" = "8:FALSE"
-"ProjectName" = "8:AIThermometerInstaller-English"
-"LanguageId" = "3:1033"
-"CodePage" = "3:1252"
-"UILanguageId" = "3:1033"
+"ProjectName" = "8:AIThermometerInstaller-Chinese"
+"LanguageId" = "3:2052"
+"CodePage" = "3:936"
+"UILanguageId" = "3:2052"
 "SccProjectName" = "8:"
 "SccLocalPath" = "8:"
 "SccAuxPath" = "8:"
@@ -693,6 +693,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_425323AE00614D158DA665BA0FFE6607"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_42FE91837462452EBC25B2126C6B7046"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -994,12 +1000,6 @@
         "Entry"
         {
         "MsmKey" = "8:_6AADEBAB31C949B3B1807B4AF8A0E965"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_6AC1306D037444E3BE86DE231B1096AB"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -2397,7 +2397,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:\\\\mac\\home\\documents\\visual studio 2015\\Projects\\AIThermometer\\build\\Debug\\AIThermometerInstaller\\AIThermometerInstaller.msi"
+        "OutputFilename" = "8:\\\\Mac\\Home\\Documents\\Visual Studio 2015\\Projects\\AIThermometer\\build\\Debug\\AI测温仪安装包\\AIThermometerInstaller.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -4726,6 +4726,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_425323AE00614D158DA665BA0FFE6607"
+            {
+            "SourcePath" = "8:\\\\Mac\\Home\\Documents\\Visual Studio 2015\\Projects\\AIThermometer\\AIThermometer\\setting.json"
+            "TargetName" = "8:setting.json"
+            "Tag" = "8:"
+            "Folder" = "8:_0E540BC845E8419F873FA91211E67F8A"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_42FE91837462452EBC25B2126C6B7046"
             {
             "SourcePath" = "8:\\\\Mac\\Home\\Documents\\Visual Studio 2015\\Projects\\AIThermometer\\AIThermometer\\plugins\\video_chroma\\libi420_nv12_plugin.dll"
@@ -5743,26 +5763,6 @@
             "TargetName" = "8:libstream_out_smem_plugin.dll"
             "Tag" = "8:"
             "Folder" = "8:_DF02992101CF48EEA8339AFF51AE8B02"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6AC1306D037444E3BE86DE231B1096AB"
-            {
-            "SourcePath" = "8:\\\\Mac\\Home\\Documents\\Visual Studio 2015\\Projects\\AIThermometer\\AIThermometer\\setting-en.json"
-            "TargetName" = "8:setting.json"
-            "Tag" = "8:"
-            "Folder" = "8:_0E540BC845E8419F873FA91211E67F8A"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -10622,7 +10622,7 @@
         }
         "MsiBootstrapper"
         {
-        "LangId" = "3:1033"
+        "LangId" = "3:2052"
         "RequiresElevation" = "11:FALSE"
         }
         "Product"
@@ -10630,7 +10630,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:AIThermometer"
         "ProductCode" = "8:{F3C635EC-933B-4982-8C72-93DD45B73CDA}"
-        "PackageCode" = "8:{81728D9F-B8A7-4223-BB03-A84BDCDBD058}"
+        "PackageCode" = "8:{96DEC2A0-D3D3-454A-BAA3-85170145B09A}"
         "UpgradeCode" = "8:{01F75A64-DAD4-42FD-8DCA-C7F227C537A8}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"

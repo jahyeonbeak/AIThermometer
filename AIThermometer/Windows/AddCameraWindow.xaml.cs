@@ -62,10 +62,12 @@ namespace AIThermometer.Windows
             }*/
             ci.IP = ip.Text;
             ci.Date = DateTime.Now;
-            ci.BlackCell_Temp = "37";
-            ci.Report_URL = "http://192.168.0.112/Report";
-            ci.Device_Name = "0.15562";
-            
+            ci.state = CamContectingState.OFFLINE;
+
+            //ci.BlackCell_Temp = "37";
+            //ci.Report_URL = "http://192.168.0.112/Report";
+            //ci.Device_Name = "0.15562";
+
             DialogResult = true;
         }
 

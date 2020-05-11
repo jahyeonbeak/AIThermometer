@@ -3,18 +3,12 @@ using AIThermometer.Services;
 using AIThermometer.Windows;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net.NetworkInformation;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace AIThermometer
 {
@@ -29,6 +23,11 @@ namespace AIThermometer
 
         ImageBrush closeIB;
 
+        public delegate void ConnectHandlerEvent(string ip);
+        public ConnectHandlerEvent ConnectHandler = null;
+        public ConnectHandlerEvent DisconnectHandler = null;
+        public string c_name = "";
+
         public CameraController(CameraInfo cameraInfo)
         {
             InitializeComponent();
@@ -36,20 +35,10 @@ namespace AIThermometer
             closeIB = new ImageBrush();
             _cameraInfo = cameraInfo;
             cameraName.Content = cameraInfo.Name;
-            if (cameraInfo.state == CamContectingState.ONLINE)
-            {
-                Uri uri = new Uri(@"/image/camera.png", UriKind.Relative);
-                ImageBrush ib = new ImageBrush();
-                ib.ImageSource = new BitmapImage(uri);
-                image.Source = ib.ImageSource;
-            }
-            else
-            {
-                Uri uri = new Uri(@"/image/camera_close.png", UriKind.Relative);
-                ImageBrush ib = new ImageBrush();
-                ib.ImageSource = new BitmapImage(uri);
-                image.Source = ib.ImageSource;
-            }
+            ChangedState(cameraInfo.state);
+            c_name = cameraInfo.Name;
+
+
             Uri uri1 = new Uri(@"pack://application:,,,/image/down.png", UriKind.Absolute);
             closeIB.ImageSource = new BitmapImage(uri1);
             Uri uri2 = new Uri(@"pack://application:,,,/image/up.png", UriKind.Absolute);
@@ -57,7 +46,17 @@ namespace AIThermometer
             mainGrid.RowDefinitions[1].Height = new GridLength();
             this.Height = 47;
             label1.Width = 323;
+        }
 
+        public CamContectingState ConnectState()
+        {
+            return _cameraInfo.state;
+        }
+
+        public void SetConnectHandler(ConnectHandlerEvent ec, ConnectHandlerEvent ed)
+        {
+            ConnectHandler += ec;
+            DisconnectHandler += ed;
         }
 
         private void SettingButton_Click(object sender, RoutedEventArgs e)
@@ -80,66 +79,137 @@ namespace AIThermometer
                 this.Height = 47;
                 label1.Width = 323;
             }
-
         }
-
+        
         private void Update_Click(object sender, RoutedEventArgs e)
         {
+            if (_cameraInfo.state == CamContectingState.ONLINE)
+            {
+                UpdateCameraWindow uc = new UpdateCameraWindow(_cameraInfo);
+                
+                uc.ShowDialog();
+                // 点击确定的话
+                if (uc.DialogResult == true)
+                {
+                    CameraInfo cameraInfo = uc.GetCameraInfo();
+                    // TODO POST 3个信息。
+
+                    cameraName.Content = cameraInfo.Name;
+
+                    Thread t = new Thread(new ThreadStart(new Action(() =>
+                    {
+                        PostToHW(uc.FI, cameraInfo.IP);
+                    }
+                    )));
+                    t.Start();
+                }
+            }
+            else
+            {
+                UpdateCameraWindow uc = new UpdateCameraWindow(_cameraInfo);
+                uc.ShowDialog();
+
+            }
+          
+        }
+
+        private static void PostToHW(object j, object i)
+        {
+            string ip = i as string;
+            var formDatas = j as List<FormItemModel>;
+
+            //提交表单
             try
             {
-                HttpRequestHelper http_request = new HttpRequestHelper();
-                string json = http_request.HttpGet("http://" + _cameraInfo.IP + ":9300/config", "");
-                CameraResponse cr = JsonHelper.FromJSON<CameraResponse>(json);
-                _cameraInfo.BlackCell_Temp = cr.SavedParams.BlackCell_Temperature.ToString();
-                _cameraInfo.Report_URL = cr.SavedParams.Report_URL;
-                _cameraInfo.Device_Name = cr.DEVICE;
-                _cameraInfo.Camera_Threshold = cr.SavedParams.Camera_Threshold.ToString();
-                _cameraInfo.Face_LimitSize = cr.SavedParams.Face_LimitSize.ToString();
-                _cameraInfo.Face_Score = cr.SavedParams.Face_Score.ToString();
+                var result = FormPost.PostForm("http://" + ip + ":9300/config", formDatas);
+
             }
-            catch
+            catch (Exception ex)
             {
-                return;
-            }
-
-            UpdateCameraWindow uc = new UpdateCameraWindow(_cameraInfo);
-            uc.ShowDialog();
-            // 点击确定的话
-            if (uc.DialogResult == true)
-            {
-                CameraInfo cameraInfo = uc.GetCameraInfo();
-                // TODO POST 3个信息。
-
-                cameraName.Content = cameraInfo.Name;
-
+                LogHelper.WriteLog("update camera error", ex);
             }
         }
 
         private void contectButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(_cameraInfo.IP);
-            ChangedState(_cameraInfo.state);
+            if (_cameraInfo.state == CamContectingState.OFFLINE)
+            {
+                Ping ping = new Ping();
+
+                try
+                {
+                    if (ping.Send(_cameraInfo.IP, 2000).Status == IPStatus.Success)
+                    {
+                        if (ConnectHandler != null)
+                        {
+                            ConnectHandler(_cameraInfo.IP);
+                            _cameraInfo.state = CamContectingState.ONLINE;
+                            ChangedState(_cameraInfo.state);
+                        }
+                    }
+                    else
+                    {
+                        LogHelper.WriteLog("Connect to device. device offline");
+                        ErrorWindow mw = new ErrorWindow(Application.Current.FindResource("errorText").ToString(), Application.Current.FindResource("nodevice").ToString());
+                        mw.ShowDialog();
+                    }
+                }
+                catch(Exception ex)
+                {
+                    LogHelper.WriteLog("Connect to device error", ex);
+                    ErrorWindow mw = new ErrorWindow(Application.Current.FindResource("errorText").ToString(), Application.Current.FindResource("nodevice").ToString());
+                    mw.ShowDialog();
+                }
+                
+            }
+            else
+            {
+                if (DisconnectHandler != null)
+                {
+                    DisconnectHandler(_cameraInfo.IP);
+                    _cameraInfo.state = CamContectingState.OFFLINE;
+                    ChangedState(_cameraInfo.state);
+                }
+            }
         }
 
-        public void Connect()
-        {
-            //if (CameraFactory.Instance().GetCameraByName())
-        }
-
-        public void ChangedState(CamContectingState cs)
+        private void ChangedState(CamContectingState cs)
         {
             _cameraInfo.state = cs;
+            Uri uri;
+            Uri buri;
+            ImageBrush ib;
+            ImageBrush bib;
             switch (_cameraInfo.state)
             {
                 case CamContectingState.OFFLINE:
+                    uri = new Uri(@"/image/camera_close.png", UriKind.Relative);
+                    ib = new ImageBrush();
+                    ib.ImageSource = new BitmapImage(uri);
+                    image.Source = ib.ImageSource;
+                    connectLabel.Text = Application.Current.FindResource("conCamera").ToString();
 
-                    // 图片切换为离线图片
-                    // 按钮切换为连接
+                    buri = new Uri(@"/image/lian.png", UriKind.Relative);
+                    bib = new ImageBrush();
+                    bib.ImageSource = new BitmapImage(buri);
+                    imageButton.Source = bib.ImageSource;
+
                     break;
+
                 case CamContectingState.ONLINE:
-                    // 图片切换为在线图片
-                    // 按钮切换为断开
+                    uri = new Uri(@"/image/camera.png", UriKind.Relative);
+                    ib = new ImageBrush();
+                    ib.ImageSource = new BitmapImage(uri);
+                    image.Source = ib.ImageSource;
+                    connectLabel.Text = Application.Current.FindResource("disCamera").ToString();
+
+                    buri = new Uri(@"/image/duan.png", UriKind.Relative);
+                    bib = new ImageBrush();
+                    bib.ImageSource = new BitmapImage(buri);
+                    imageButton.Source = bib.ImageSource;
+                    
                     break;
+
                 default:
                     break;
             }

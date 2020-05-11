@@ -21,6 +21,7 @@ using System.IO;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Threading;
 using System.Windows.Threading;
+using System.Globalization;
 
 namespace AIThermometer.Windows
 {
@@ -42,6 +43,7 @@ namespace AIThermometer.Windows
             VclCamInit();
             
             TempWarning tmp = TempWarning.Instance();
+            tmp.SetLength(warning_bar_length);
             tmp.addedWarningInfo += new TempWarning.AddedQueueEventHandler(AddTemp);
             aTimer = new System.Timers.Timer();
             aTimer.Elapsed += new System.Timers.ElapsedEventHandler(dt_Tick);
@@ -49,8 +51,12 @@ namespace AIThermometer.Windows
             aTimer.Enabled = true;
             aTimer.Start();
             SetLabel();
-            
-            
+
+            CultureInfo ci = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
+
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -58,7 +64,10 @@ namespace AIThermometer.Windows
             if (AIThermometerAPP.Instance().AutoStartCam())
             {
                 if (CameraFactory.Instance().cl.Count > 0)
-                    this.vlcWindow.SetCamStream(CameraFactory.Instance().cl[0]);
+                    foreach (var ci in CameraFactory.Instance().cl)
+                    {
+                        this.vlcWindow.SetCamStream(ci);
+                    }
             }
 
             //mc)
@@ -75,7 +84,6 @@ namespace AIThermometer.Windows
 
            this.Width = System.Windows.SystemParameters.PrimaryScreenWidth;
            this.Height = System.Windows.SystemParameters.PrimaryScreenHeight;
-
         }
 
         public void WarningBarRefresh()
@@ -89,14 +97,20 @@ namespace AIThermometer.Windows
         /// </summary>
         private void VclCamInit()
         {
-            List<CameraController> cameraControllers = new List<CameraController>();
+            LogHelper.WriteLog("vcl cam init start");
             foreach (var c in AIThermometerAPP.Instance().cameras_config.Cameras)
             {
+                // 如果不是自动启动，所有相机的状态设为离线
+                if (!AIThermometerAPP.Instance().AutoStartCam())
+                {
+                    c.state = CamContectingState.OFFLINE;
+                }
+
                 if (c.state == CamContectingState.ONLINE && 
                     AIThermometerAPP.Instance().AutoStartCam())
                 {
                     // 如果摄像头Online 开始画面
-                    if (!CameraFactory.Instance().CreateCameraStream(c.Name, c.IP, c.StreamType))
+                    if (CameraFactory.Instance().CreateCameraStream(c.Name, c.IP, c.StreamType) == null)
                     {
                         c.state = CamContectingState.OFFLINE;
                     }
@@ -105,9 +119,12 @@ namespace AIThermometer.Windows
                     // TODO 状态从c。state获取, 名称也在c.name里。
                 }
                 CameraController cameraController = new CameraController(c);
+                cameraController.SetConnectHandler(this.ConnectHandler, this.DisconnectHandler);
                 listView.Items.Add(cameraController);
+                ViewButtonStateChanged(c.state);
+
             }
-            Console.WriteLine(CameraFactory.Instance().cl.Count + " cameras ready!");
+            LogHelper.WriteLog("vcl cam init end : " + CameraFactory.Instance().cl.Count + " cameras ready!");
         }
 
 
@@ -116,9 +133,24 @@ namespace AIThermometer.Windows
 
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                if (listView1.Items.Count == warning_bar_length) {
+
+                for (int i = 0; i < listView1.Items.Count; i++)
+                {
+                    if ((listView1.Items[i] as WarningImage).id == tm.id)
+                    {
+                        listView1.Items.RemoveAt(i);
+                        break;
+                    }
+                }
+
+                int offset = listView1.Items.Count - warning_bar_length;
+
+                while (offset >= 0)
+                { 
                     listView1.Items.RemoveAt(0);
-                } 
+                    offset = listView1.Items.Count - warning_bar_length;
+                }
+                
                 WarningImage warningImage = new WarningImage(tm);
                 listView1.Items.Add(warningImage);
                 listView1.SelectedItem = listView1.Items.GetItemAt(listView1.Items.Count - 1);
@@ -154,7 +186,7 @@ namespace AIThermometer.Windows
                 // 锁定添加
                 if (AIThermometerAPP.Instance().cameras_config.Cameras.Count >= 1)
                 {
-                    ErrorWindow er = new ErrorWindow("错误", "当前版本暂时只支持一个设备");
+                    ErrorWindow er = new ErrorWindow(Application.Current.FindResource("errorText").ToString(), Application.Current.FindResource("errorText1").ToString());
                     er.ShowDialog();
                     return;
                 }
@@ -168,7 +200,7 @@ namespace AIThermometer.Windows
                 if (AIThermometerAPP.Instance().cameras_config.AddCam(ac.GetCameraInfo()))
                 {
                     AIThermometerAPP.Instance().SaveCameraConfigs();
-                    Console.WriteLine("Added camerainfo to camera list. And saved!");
+                    LogHelper.WriteLog("Added camerainfo to camera list. And saved!");
                 }
                 else
                 {
@@ -182,15 +214,26 @@ namespace AIThermometer.Windows
 
         private void delCamButton_Click(object sender, RoutedEventArgs e)
         {
+            
             CameraController camera = listView.SelectedItem as CameraController;
             if (camera==null)
             {
-                MessageBox.Show("请选择需要删除的摄像头");
+                return;
+                //MessageBox.Show(Application.Current.FindResource("delCameraWarnText").ToString());
             }
-            MessageWindow mw = new MessageWindow("删除设备", "您确定要删除设备吗?");
+            
+            if (camera.ConnectState() == CamContectingState.ONLINE)
+            {
+                ErrorWindow er = new ErrorWindow(Application.Current.FindResource("errorText").ToString(), Application.Current.FindResource("pleaseDisconnect").ToString());
+                er.ShowDialog();
+                //MessageBox.Show(Application.Current.FindResource("delCameraWarnText").ToString());
+                return;
+            }
+            MessageWindow mw = new MessageWindow(Application.Current.FindResource("delText").ToString(), Application.Current.FindResource("delText1").ToString());
+            mw.ShowDialog();
             if (mw.DialogResult == true)
             {
-                AIThermometerAPP.Instance().cameras_config.DeleteCamByName(camera.Name);
+                AIThermometerAPP.Instance().cameras_config.DeleteCamByName(camera.c_name);
                 AIThermometerAPP.Instance().SaveCameraConfigs();
                 listView.Items.Remove(camera);
             }
@@ -198,21 +241,53 @@ namespace AIThermometer.Windows
 
         private void BlackcellButton_Click(object sender, RoutedEventArgs e)
         {
-            string shot_path = AIThermometerAPP.Instance().AppPath() + "\\snapshot.jpeg";
+            string shot_path = AIThermometerAPP.Instance().TmpPath() + "\\" + Guid.NewGuid().ToString() + ".jpeg";
             if (!Shot(shot_path, CamMode.IR))
             {
-                ErrorWindow ew = new ErrorWindow("错误", "视频流截取错误,请重试");
+                ErrorWindow ew = new ErrorWindow(Application.Current.FindResource("errorText").ToString(), Application.Current.FindResource("errorText2").ToString());
                 ew.ShowDialog();
                 return ;
             }
-        
+
             BlackCellSettingWindow bc = new BlackCellSettingWindow(shot_path, vlcWindow.ip);
             if (bc.Init())
             {
                 if (bc.ShowDialog() == true)
                 {
-                    AIThermometerAPP.Instance().ResetBlackCell();
+                    Thread t = new Thread(new ThreadStart(new Action(() =>
+                    {
+                        PostToHW(bc.POSJSON, vlcWindow.ip);
+                    }
+                    )));
+                    t.Start();
                 }
+            }
+        }
+
+        private static void PostToHW(object j, object i)
+        {
+            string ip = i as string;
+            string json = j as string;
+            var formDatas = new List<FormItemModel>();
+
+            //添加文本
+            formDatas.Add(new FormItemModel()
+            {
+                Key = "BlackCell-Position",
+                Value = json // "id-test-id-test-id-test-id-test-id-test-"
+            });
+
+            //提交表单
+            try
+            {
+                AIThermometerAPP.Instance().blackcell_pos_error = true;
+                var result = FormPost.PostForm("http://" + ip + ":9300/config", formDatas);
+                AIThermometerAPP.Instance().ResetBlackCell();
+
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog("post to hw error", ex);
             }
         }
 
@@ -239,9 +314,9 @@ namespace AIThermometer.Windows
             int total = com + high;
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                commonLabel.Content = "温度正常" + com + "人";
-                highLabel.Content = "温度异常" + high + "人";
-                totalLabel.Content = "今天共检测" + total + "人";
+                commonLabel.Content = Application.Current.FindResource("tempNormal").ToString() + com;
+                highLabel.Content = Application.Current.FindResource("tempHigh").ToString() + high;
+                totalLabel.Content = Application.Current.FindResource("temptotal").ToString() + total;
             }));
 
 
@@ -323,7 +398,7 @@ namespace AIThermometer.Windows
             settingWindow.ShowDialog();
             if (settingWindow.DialogResult == true)
             {
-
+                TempWarning.Instance().SetLength(AIThermometerAPP.Instance().config.warning_bar_length);
             }
         }
 
@@ -339,11 +414,11 @@ namespace AIThermometer.Windows
             }
             CameraFactory.Instance().cl.Clear();
             this.vlcWindow.Shutdown();
-            vlcWindow.RunCheck(false);
+
             ServerHelper.Instance().Dispose();
             //TempWarning.Instance().addedWarningInfo = null;
             //;aTimer.Close();
-            Console.WriteLine("Closing APP");
+            LogHelper.WriteLog("Closing APP");
             Environment.Exit(0);
             //base.OnClosing();
         }
@@ -406,7 +481,7 @@ namespace AIThermometer.Windows
             }
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                ErrorWindow ew = new ErrorWindow("升级操作", "升级操作完成");
+                ErrorWindow ew = new ErrorWindow(Application.Current.FindResource("updateText1").ToString(), Application.Current.FindResource("updateText2").ToString());
                 ew.Show();
             }));
 
@@ -429,5 +504,59 @@ namespace AIThermometer.Windows
                 }
             }));
         }  
+
+        public void ConnectHandler(string ip)
+        {
+            foreach (var c in AIThermometerAPP.Instance().cameras_config.Cameras)
+            {
+                if (c.IP == ip)
+                {
+                    var mc = CameraFactory.Instance().CreateCameraStream(c.Name, c.IP, c.StreamType);
+                    if (mc != null)
+                    {
+                        c.state = CamContectingState.ONLINE;
+                        this.vlcWindow.SetCamStream(mc);
+                        LogHelper.WriteLog("Connect handler cl count :" +CameraFactory.Instance().cl.Count);
+                    }
+                }
+                ViewButtonStateChanged(c.state);
+            }
+            this.vlcWindow.ChangeLeft();
+        }
+
+        public void DisconnectHandler(string ip)
+        {
+
+            this.vlcWindow.DelCamStream();
+            CameraFactory.Instance().DelCamStream(ip);
+            foreach (var c in AIThermometerAPP.Instance().cameras_config.Cameras)
+            {
+                c.state = CamContectingState.OFFLINE;
+                ViewButtonStateChanged(c.state);
+            }
+        }
+
+        private void ViewButtonStateChanged(CamContectingState ccs)
+        {
+            switch(ccs)
+            {
+                case CamContectingState.ONLINE:
+                    this.vclLeftBtn.IsEnabled = true;
+                    this.vclRightBtn.IsEnabled = true;
+                    this.vclBoth.IsEnabled = true;
+                    this.blackCellBtn.IsEnabled = true;
+                    break;
+                case CamContectingState.OFFLINE:
+                case CamContectingState.ERROR:
+                    this.vclLeftBtn.IsEnabled = false;
+                    this.vclRightBtn.IsEnabled = false;
+                    this.vclBoth.IsEnabled = false;
+                    this.blackCellBtn.IsEnabled = false;
+                    break;
+                default:
+                    break;
+            }
+        }
+        
     }
 }

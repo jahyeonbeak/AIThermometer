@@ -27,7 +27,6 @@ namespace AIThermometer
         private string warning_pic_path = "";
         private string tmp_path = "";
         private string capture_path = "";
-        private float temp_limit = 37.3f;
         private int pass_face = 0;
         private int noPass_face = 0;
 
@@ -36,11 +35,16 @@ namespace AIThermometer
 
         public CameraConfig cameras_config = null;
         public LocalSetting config = null;
+        private string version = "";
 
         public AIThermometerAPP()
         {
+
+            // version 
+            this.version = "1.1.4 200422-Build";
+
             this.app_path = AppDomain.CurrentDomain.BaseDirectory;
-            Console.WriteLine(this.app_path);
+            LogHelper.WriteLog("app base path is : " + this.app_path);
             this.camera_path = this.app_path + "cameras.json";
             this.setting_path = this.app_path + "setting.json";
             this.libvlc_path = this.app_path + "libvlc.dll";
@@ -51,11 +55,12 @@ namespace AIThermometer
             VoicePlayer.Instance().SetPath(this.app_path + "warning.wav");
             Common.CreateDir(this.warning_pic_path);
             Common.CreateDir(this.capture_path);
+            LogHelper.WriteLog("Load config");
         }
 
         public float TempLimit()
         {
-            return this.temp_limit;
+            return this.config.temp_limit;
         }
 
         public static AIThermometerAPP Instance()
@@ -131,6 +136,11 @@ namespace AIThermometer
             return this.capture_path;
         }
 
+        public string TmpPath()
+        {
+            return this.tmp_path;
+        }
+
         public bool CanCapture()
         {
             return ((this.noPass_face + this.pass_face) % 7 == 0);
@@ -139,20 +149,24 @@ namespace AIThermometer
         public bool AutoStartCam()
         {
             return config.camera_auto_start;
+        }
 
+        public string GetVersion()
+        {
+            return this.version;
         }
 
         public void SaveCameraConfigs()
         {
             string json = JsonHelper.ToJSON(this.cameras_config);
             File.WriteAllText(this.camera_path, json);
-            Console.WriteLine("Save Camera Config.");
+            LogHelper.WriteLog("Save Camera Config.");
         }
 
         public void LoadConfigs()
         {
             string setting_json = LoadJson(this.setting_path);
-            Console.WriteLine(setting_json);
+            LogHelper.WriteLog(setting_json);
             LocalSetting items = JsonHelper.FromJSON<LocalSetting>(setting_json);
             this.config = items;
         }
@@ -161,25 +175,25 @@ namespace AIThermometer
         {
             string json = JsonHelper.ToJSON(this.config);
             File.WriteAllText(this.setting_path, json);
-            Console.WriteLine("Save Setting Config.");
+            LogHelper.WriteLog("Save Setting Config.");
         }
 
 
         public void LoadCameraConfigs()
         {
-            Console.WriteLine("Find Camera setting config");
+            LogHelper.WriteLog("Find Camera setting config");
             string camera_json = LoadJson(this.camera_path);
-            Console.WriteLine(camera_json);
+            LogHelper.WriteLog(camera_json);
             CameraConfig items = JsonHelper.FromJSON<CameraConfig>(camera_json);
 
             try
             {
-                Console.WriteLine("Find " + items.Cameras.Count() + "cameras");
+                LogHelper.WriteLog("Find " + items.Cameras.Count() + "cameras");
             }
             catch
             {
 
-                Console.WriteLine("No camera info in setting file");
+                LogHelper.WriteLog("No camera info in setting file");
             }
             this.cameras_config = items;
         }

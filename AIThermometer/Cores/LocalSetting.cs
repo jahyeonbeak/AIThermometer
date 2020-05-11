@@ -32,5 +32,8 @@ namespace AIThermometer.Cores
 
         // 人脸图片保存期限
         public int clean_day { get; set; }
+
+        // 视频超时间
+        public int video_timeout { get; set; }
     }
 }

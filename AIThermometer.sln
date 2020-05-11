@@ -5,7 +5,11 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIThermometer", "AIThermometer\AIThermometer.csproj", "{73ADB32D-287C-4C3A-AED4-92E6C94F955A}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "AIThermometerInstaller", "AIThermometerInstaller\AIThermometerInstaller.vdproj", "{CF46FDBF-8B7F-468A-9E1A-B93096F71443}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "AIThermometerInstaller-English", "AIThermometerInstaller\AIThermometerInstaller.vdproj", "{CF46FDBF-8B7F-468A-9E1A-B93096F71443}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{96D0DF2A-ED4C-45B0-884A-CDF99E3AE549}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "AIThermometerInstaller-Chinese", "AIThermometerInstaller-Chinese\AIThermometerInstaller-Chinese.vdproj", "{5B21018C-81CF-4B03-BC92-4154A1E37710}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,8 +29,17 @@ Global
 		{73ADB32D-287C-4C3A-AED4-92E6C94F955A}.Release|x86.Build.0 = Release|x86
 		{CF46FDBF-8B7F-468A-9E1A-B93096F71443}.Debug|Any CPU.ActiveCfg = Debug
 		{CF46FDBF-8B7F-468A-9E1A-B93096F71443}.Debug|x86.ActiveCfg = Debug
+		{CF46FDBF-8B7F-468A-9E1A-B93096F71443}.Debug|x86.Build.0 = Debug
 		{CF46FDBF-8B7F-468A-9E1A-B93096F71443}.Release|Any CPU.ActiveCfg = Release
 		{CF46FDBF-8B7F-468A-9E1A-B93096F71443}.Release|x86.ActiveCfg = Release
+		{5B21018C-81CF-4B03-BC92-4154A1E37710}.Debug|Any CPU.ActiveCfg = Debug
+		{5B21018C-81CF-4B03-BC92-4154A1E37710}.Debug|Any CPU.Build.0 = Debug
+		{5B21018C-81CF-4B03-BC92-4154A1E37710}.Debug|x86.ActiveCfg = Debug
+		{5B21018C-81CF-4B03-BC92-4154A1E37710}.Debug|x86.Build.0 = Debug
+		{5B21018C-81CF-4B03-BC92-4154A1E37710}.Release|Any CPU.ActiveCfg = Release
+		{5B21018C-81CF-4B03-BC92-4154A1E37710}.Release|Any CPU.Build.0 = Release
+		{5B21018C-81CF-4B03-BC92-4154A1E37710}.Release|x86.ActiveCfg = Release
+		{5B21018C-81CF-4B03-BC92-4154A1E37710}.Release|x86.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

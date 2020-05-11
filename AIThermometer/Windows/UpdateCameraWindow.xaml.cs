@@ -13,6 +13,7 @@ using System.Windows.Shapes;
 using AIThermometer.Cores;
 using AIThermometer.Services;
 using System.IO;
+using System.ComponentModel;
 
 namespace AIThermometer.Windows
 {
@@ -22,24 +23,107 @@ namespace AIThermometer.Windows
     public partial class UpdateCameraWindow : Window
     {
         private CameraInfo ci;
+        private new List<FormItemModel> fi;
 
         public UpdateCameraWindow(CameraInfo _ci)
         {
             InitializeComponent();
             ci = _ci;
-            ci.state = ci.state;
             title.Content = ci.Name;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             this.Topmost = true;
             ip.Text = ci.IP;
+            version_label.Content = "";
+            // device.Text = ci.Name;
 
-            balckTemp.Text = ci.BlackCell_Temp;
-            address.Text = ci.Report_URL;
-            device.Text = ci.Device_Name;
+            switch (ci.state)
+            {
+                case CamContectingState.OFFLINE:
+                    ip.IsEnabled = true;
+                    device.IsEnabled = false;
 
-            camera_warn_limit.Text = ci.Camera_Threshold;
-            face_limit.Text = ci.Face_LimitSize;
-            face_score.Text = ci.Face_Score;
+                    balckTemp.IsEnabled = false;
+                    address.IsEnabled = false;
+                    camera_warn_limit.IsEnabled = false;
+                    face_limit.IsEnabled = false;
+                    face_score.IsEnabled = false;
+                    temp_value.IsEnabled = false;
+                    temp_check.IsEnabled = false;
+                    break;
+                case CamContectingState.ONLINE:
+                    ip.IsEnabled = false;
+                    device.IsEnabled = false;
+
+                    balckTemp.IsEnabled = true;
+                    address.IsEnabled = true;
+                    camera_warn_limit.IsEnabled = true;
+                    face_limit.IsEnabled = true;
+                    face_score.IsEnabled = true;
+                    temp_value.IsEnabled = false;
+                    temp_check.IsEnabled = true;
+                    using (BackgroundWorker bw = new BackgroundWorker())
+                    {
+                        bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerCompleted);
+                        bw.DoWork += new DoWorkEventHandler(bw_DoWork);
+                        bw.RunWorkerAsync(ci.IP);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+
+            
+        }
+
+        void bw_DoWork(object sender, DoWorkEventArgs e)
+        {
+
+            string ip = e.Argument as string;
+            var formDatas = new List<FormItemModel>();
+
+            // 文件名
+            formDatas.Add(new FormItemModel()
+            {
+                Key = "",
+                Value = "",
+            });
+
+            try
+            {
+                //提交表单
+                var result = FormPost.PostForm("http://" + ip + ":9300/config", null);
+                //cameraInfo.IP = ip.Text;
+                CameraResponse cr = JsonHelper.FromJSON<CameraResponse>(result);
+
+                Console.WriteLine(result);
+                LogHelper.WriteLog(result);
+                e.Result = cr;
+
+            }
+            catch (Exception)
+            {
+                e.Result = null;
+            }
+
+
+        }
+
+        void bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Result == null)
+                return;
+
+            var cr = e.Result as CameraResponse;
+            balckTemp.Text = cr.SavedParams.BlackCell_Temperature.ToString();
+            address.Text = cr.SavedParams.Report_URL;
+            device.Text = cr.DEVICE;
+            camera_warn_limit.Text = cr.SavedParams.Camera_Threshold.ToString();
+            face_limit.Text = cr.SavedParams.Face_LimitSize.ToString();
+            face_score.Text = cr.SavedParams.Face_Score.ToString();
+            temp_value.Text = cr.SavedParams.Upgrade_Coefficient.ToString();
+            version_label.Content = "Device version:" + cr.VERSION;
+
         }
 
         public CameraInfo GetCameraInfo()
@@ -47,10 +131,52 @@ namespace AIThermometer.Windows
             return ci;
         }
 
-
         private void okButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ci.state == CamContectingState.ONLINE) {
+            float black_temp = 0.0f;
+            if (float.TryParse(balckTemp.Text, out black_temp))
+            {
+                if (!(black_temp >= 33 && black_temp <= 42))
+                {
+                    ErrorWindow ew = new ErrorWindow(Application.Current.FindResource("numError").ToString(), Application.Current.FindResource("error1").ToString());
+                    ew.ShowDialog();
+                    return;
+                }
+            }
+
+            float cwl = 0.0f;
+            if (float.TryParse(camera_warn_limit.Text, out cwl))
+            {
+                if (!(cwl >= 35 && cwl <= 42))
+                {
+                    ErrorWindow ew = new ErrorWindow(Application.Current.FindResource("numError").ToString(), Application.Current.FindResource("error2").ToString());
+                    ew.ShowDialog();
+                    return;
+                }
+            }
+            float fl = 0.0f;
+            if (float.TryParse(face_limit.Text, out fl))
+            {
+                if (!(fl >= 15 && fl <= 80))
+                {
+                    ErrorWindow ew = new ErrorWindow(Application.Current.FindResource("numError").ToString(), Application.Current.FindResource("error3").ToString());
+                    ew.ShowDialog();
+                    return;
+                }
+            }
+            float fc = 0.0f;
+            if (float.TryParse(face_score.Text, out fc))
+            {
+                if (!(fc >= 0.2 && fc <= 1.0))
+                {
+                    ErrorWindow ew = new ErrorWindow(Application.Current.FindResource("numError").ToString(), Application.Current.FindResource("error4").ToString());
+                    ew.ShowDialog();
+                    return;
+                }
+            }
+
+            if (ci.state == CamContectingState.ONLINE)
+            {
                 var formDatas = new List<FormItemModel>();
 
                 // 温度系数
@@ -81,43 +207,49 @@ namespace AIThermometer.Windows
                 formDatas.Add(new FormItemModel()
                 {
                     Key = "Face-Score",
-                     Value = face_score.Text
+                    Value = face_score.Text
                 });
 
-                try
+                if (temp_check.IsChecked == true)
                 {
-                    //提交表单
-                    CameraInfo cameraInfo = new CameraInfo();
-
-                    var result = FormPost.PostForm("http://"+ci.IP +":9300/config", formDatas);
-                    //cameraInfo.IP = ip.Text;
-
-                    cameraInfo.Name = ci.Name;
-                    cameraInfo.IP = ci.IP;
-                    cameraInfo.Device_Name = ci.Device_Name;
-                    cameraInfo.Date = DateTime.Now;
-                    cameraInfo.BlackCell_Temp = balckTemp.Text;
-                    cameraInfo.Report_URL = address.Text;
-                    AIThermometerAPP.Instance().cameras_config.UpdateCam(cameraInfo);
-                    AIThermometerAPP.Instance().SaveCameraConfigs();
-                    DialogResult = true;
-
+                    formDatas.Add(new FormItemModel()
+                    {
+                        Key = "Upgrade-Coefficient",
+                        Value = temp_value.Text
+                    });
                 }
-                catch (Exception)
-                {
 
-                    ErrorWindow er = new ErrorWindow("修改错误", "不能修改离线的设备");
-                    er.ShowDialog();
-                }
+                    fi = formDatas;
+
+                CameraInfo cameraInfo = new CameraInfo();
+
+                //cameraInfo.IP = ip.Text;
+
+                cameraInfo.Name = ci.Name;
+                cameraInfo.IP = ci.IP;
+                cameraInfo.Device_Name = ci.Device_Name;
+                cameraInfo.Date = DateTime.Now;
+                cameraInfo.BlackCell_Temp = balckTemp.Text;
+                cameraInfo.Report_URL = address.Text;
+                AIThermometerAPP.Instance().cameras_config.UpdateCam(cameraInfo);
+                AIThermometerAPP.Instance().SaveCameraConfigs();
+                DialogResult = true;
 
             }
             else
             {
-                ErrorWindow er = new ErrorWindow("修改错误", "不能修改离线的设备");
-                er.ShowDialog();
-                return;
+                CameraInfo cameraInfo = new CameraInfo();
+                cameraInfo.Name = ci.Name;
+                cameraInfo.IP = ip.Text; //.IP;
+                //cameraInfo.Device_Name = ci.Device_Name;
+                cameraInfo.Date = DateTime.Now;
+                //cameraInfo.BlackCell_Temp = balckTemp.Text;
+                //cameraInfo.Report_URL = address.Text;
+                AIThermometerAPP.Instance().cameras_config.UpdateCam(cameraInfo);
+                AIThermometerAPP.Instance().SaveCameraConfigs();
+                DialogResult = true;                
             }
-            
+
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -129,26 +261,9 @@ namespace AIThermometer.Windows
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.LeftAlt) && Keyboard.IsKeyDown(Key.U))
             {
-                string file_path;
-                System.Windows.Forms.OpenFileDialog op = new System.Windows.Forms.OpenFileDialog();
-                op.Multiselect = false;
-                op.AddExtension = true;
-                op.DereferenceLinks = true;
-                if (op.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    file_path = op.FileName;
-                    if (UpdateCameraFW(op.SafeFileName, op.FileName))
-                    {
-                        MessageBox.Show("update ok");
-                        this.DialogResult = false;
-                    }
-                }
-                else
-                {
-                    ErrorWindow er = new ErrorWindow("升级错误", "不能升级离线的设备");
-                    er.ShowDialog();
-                    this.DialogResult = false;
-                }
+                FirmwareUpdateWindow fw = new FirmwareUpdateWindow(ci);
+                fw.ShowDialog();
+
             }
         }
 
@@ -156,7 +271,7 @@ namespace AIThermometer.Windows
         {
             if (ci.state == CamContectingState.ONLINE)
             {
-                
+
                 var formDatas = new List<FormItemModel>();
 
                 // 文件名
@@ -166,14 +281,14 @@ namespace AIThermometer.Windows
                     Value = "",
                     FileName = file_name,
                     FileContent = File.OpenRead(update_fpath)
-                    
+
 
                 });
 
                 try
                 {
                     //提交表单
-                    var result = FormPost.PostForm("http://" + ci.IP + ":9300/Update", formDatas);
+                    var result = FormPost.PostForm("http://" + ci.IP + ":9301/Update", formDatas);
                     //cameraInfo.IP = ip.Text;
 
                 }
@@ -188,6 +303,20 @@ namespace AIThermometer.Windows
             }
             return true;
 
+        }
+
+        public new List<FormItemModel> FI { get { return fi; } set { fi = value; } }
+        
+        private void temp_check_Click(object sender, RoutedEventArgs e)
+        {
+            if (temp_check.IsChecked == true)
+            {
+                temp_value.IsEnabled = true;
+            }
+            else
+            {
+                temp_value.IsEnabled = false;
+            }
         }
     }
 }

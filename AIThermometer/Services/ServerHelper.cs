@@ -67,7 +67,7 @@ namespace AIThermometer.Services
 
 
         public string image_dir_path = "";
-        public float temp_limit = 0f;
+        private float temp_limit = 0f;
         public int port = 1;
         // 定义一个静态变量来保存类的实例
         private static ServerHelper instance = null;
@@ -109,7 +109,7 @@ namespace AIThermometer.Services
             }
             catch (Exception e)
             {
-                ErrorWindow ew = new ErrorWindow("错误", "服务器初始化错误，请稍后重启程序");
+                ErrorWindow ew = new ErrorWindow(Application.Current.FindResource("errorText").ToString(), Application.Current.FindResource("error7").ToString());
                 ew.Show();
             }
 
@@ -120,20 +120,20 @@ namespace AIThermometer.Services
             if (stopped) return;
             var context = httpListener.EndGetContext(iar);
             httpListener.BeginGetContext(GetHttpContextCallback, null);
+            Thread t = new Thread(HttpThread);
+            t.Start(context);
+        }
+
+        private void HttpThread(object c)
+        {
+            var context = c as HttpListenerContext;
+        
             string endPoint = context.Request.RemoteEndPoint.ToString();
             int spIndex = endPoint.IndexOf(":");
             endPoint = endPoint.Substring(0, spIndex);
 
             using (HttpListenerResponse response = context.Response)
-            {
-                //get 的方式在如下解析即可得到客户端参数及值
-                //string userName = context.Request.QueryString["userName"];
-                //string password = context.Request.QueryString["password"];
-                //string suffix = context.Request.QueryString["suffix"];
-                //string adType = context.Request.QueryString["adtype"];//文字,图片,视频
-
-
-
+            { 
                 if (!context.Request.HasEntityBody)//无数据
                 {
                     response.StatusCode = 403;
@@ -226,16 +226,17 @@ namespace AIThermometer.Services
                         }
                     }
 
-                    Console.WriteLine(attachValue);
+                    LogHelper.WriteLog(attachValue);
                     CameraWarning items = JsonHelper.FromJSON<CameraWarning>(attachValue);
                     tm.cam = AIThermometerAPP.Instance().cameras_config.GetNameByIP(endPoint);
                     if (items.Code == 0 && !AIThermometerAPP.Instance().blackcell_pos_error)
                     {
                         tm.temp = items.Reports[0].Temperature;
+                        tm.id = items.Reports[0].objId;
                         tm.date = DateTime.Now;
 
                         string file_name = tm.date.ToString("yyMMdd") + "\\";
-                        if (tm.temp > temp_limit)
+                        if (tm.temp > AIThermometerAPP.Instance().TempLimit())
                         {
                             file_name = file_name + "nopass\\";
                             AIThermometerAPP.Instance().AddNoPassFace();
@@ -265,7 +266,7 @@ namespace AIThermometer.Services
                         {
                             AIThermometerAPP.Instance().blackcell_pos_error = true;
                             
-                            ewHandler?.Invoke("错误", "黑体位置错误或被遮挡,请检查");
+                            ewHandler?.Invoke(Application.Current.FindResource("errorText").ToString(), Application.Current.FindResource("error8").ToString());
                             AIThermometerAPP.Instance().ResetBlackCell();
                         }
                     }

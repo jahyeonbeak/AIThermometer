@@ -51,6 +51,10 @@ namespace AIThermometer.Services
         [JsonProperty(PropertyName = "Face-Score")]
         public string Face_Score { get; set; }
 
+        // 温度系数
+        [JsonProperty(PropertyName = "Upgrade-Coefficient")]
+        public string Upgrade_Coefficient { get; set; }
+
     }
 
     public class CameraConfig
@@ -78,9 +82,8 @@ namespace AIThermometer.Services
             {
                 if (c.Name == ci.Name)
                 {
-                    c.Report_URL = ci.Report_URL;
-                    c.Device_Name = ci.Device_Name;
-                    c.BlackCell_Temp = ci.BlackCell_Temp;
+                    c.IP = ci.IP;
+                    //c.BlackCell_Temp = ci.BlackCell_Temp;
                     break;
                 }
             }
@@ -134,7 +137,7 @@ namespace AIThermometer.Services
     {
         public static void SavePic(string ip)
         {
-            Console.WriteLine("Saved picture from " + ip + "! File path " + "");
+            LogHelper.WriteLog("Saved picture from " + ip + "! File path " + "");
         }
     }
 
@@ -224,8 +227,8 @@ namespace AIThermometer.Services
 
 
         // 温度系数
-        //[JsonProperty(PropertyName = "Upgrade-Coefficient")]
-        //public float Upgrade_Coefficient { get; set; }
+        [JsonProperty(PropertyName = "Upgrade-Coefficient")]
+        public float Upgrade_Coefficient { get; set; }
 
     }
     
@@ -263,6 +266,8 @@ namespace AIThermometer.Services
         public List<float> Position { get; set; }
         // 是否带了口罩
         public bool Mask { get; set; }
+        // id
+        public int objId { get; set; }
 
     }
 
@@ -279,4 +284,20 @@ namespace AIThermometer.Services
 
 
     }
+
+
+    // 请求摄像头后返回数据
+    public class FirmwareResponse
+    {
+        // 返回码
+        public int Code { get; set; }
+
+        // 返回信息
+        public string Message { get; set; }
+
+        // version
+        public List<string> Patchs { get; set; }
+
+        }
+
 }

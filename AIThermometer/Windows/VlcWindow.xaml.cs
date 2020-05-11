@@ -38,9 +38,25 @@ namespace AIThermometer.Windows
         private static Mutex mut = new Mutex();
         bool runCheck = false;
 
+        //System.Threading.Timer normalTimer;
+        //System.Threading.Timer irTimer;
+
+        Thread normalTimer;//  = new Thread(CheckConnection);
+        Thread irTimer; //  = new Thread(CheckConnection);
+        bool normalTRun;
+        bool irTRun;
+
+        private static object lockn = new object();
+        private static object locki = new object();
+
+        private int video_timeout = 10;
+        int normalNeedReset = 0;
+        int irNeedReset = 0;
+
         public VlcWindow()
         {
             InitializeComponent();
+            video_timeout = AIThermometerAPP.Instance().config.video_timeout;
             //ChangeLeft();
             //SetupTest();
         }
@@ -48,6 +64,33 @@ namespace AIThermometer.Windows
 
         public void Shutdown()
         {
+            normalTRun = false;
+            irTRun = false;
+            if (irTimer != null)
+            {
+                if (irTimer.ThreadState != ThreadState.Suspended)
+                {
+                    irTimer.Abort();
+                }
+                else
+                {
+                    irTimer.Resume();
+                    irTimer.Abort();
+                }
+            }
+            if (normalTimer != null)
+            {
+                if (normalTimer.ThreadState != ThreadState.Suspended)
+                {
+                    normalTimer.Abort();
+                }
+                else
+                {
+                    normalTimer.Resume();
+                    normalTimer.Abort();
+                }
+            }
+            Thread.Sleep(1000);
             foreach (var a in multiPlayer)
             {
                 a.Value.Stop();
@@ -55,17 +98,17 @@ namespace AIThermometer.Windows
             multiPlayer.Clear();
         }
 
-
-        public void RunCheck(bool rc)
-        {
-            mut.WaitOne();
-            runCheck = rc;
-            mut.ReleaseMutex();
-        }
-
         public void SetCamStream(MultiCam mc)
         {
             runCheck = true;
+
+            normalTimer = new Thread(normal_Tick);
+            irTimer = new Thread(ir_Tick);
+            normalTRun = true;
+            irTRun = true;
+            normalNeedReset = 0;
+            irNeedReset = 0;
+
             foreach (var item in mc)
             {
                 // 工厂的接口转成控件
@@ -79,24 +122,44 @@ namespace AIThermometer.Windows
                 // 生成ping线程
                 if (item.Key == CamMode.IR)
                 {
-                    Thread t = new Thread(CheckConnection);
-                    t.Start(vc.GetIP());
+                    //Thread t = new Thread(CheckConnection);
+                    //t.Start(vc.GetIP());
                 }
-
-                //vc.vlcPlayer.HorizontalAlignment = HorizontalAlignment.Stretch;
-                //vc.vlcPlayer.VerticalAlignment = VerticalAlignment.Stretch;
+                vc.vlcPlayer.Height = this.Height;
+                v1.Height = this.Height;
+                v2.Height = this.Height;
+                vc.vlcPlayer.HorizontalAlignment = HorizontalAlignment.Stretch;
+                vc.vlcPlayer.VerticalAlignment = VerticalAlignment.Stretch;
+                var viewBox = vc.vlcPlayer.Content as Viewbox;
+                viewBox.Stretch = System.Windows.Media.Stretch.Fill;
+                
             }
+            
+            //aTimer.Start();
 
             //(mc[CamMode.IR] as VlcCamera).vlcPlayer.SetValue(Grid.ColumnProperty, 1);
             //(mc[CamMode.NORMAL] as VlcCamera).vlcPlayer.SetValue(Grid.ColumnProperty, 0);
 
             this.v1.Children.Add((mc[CamMode.IR] as VlcCamera).vlcPlayer);
             this.v2.Children.Add((mc[CamMode.NORMAL] as VlcCamera).vlcPlayer);
-            v1.Width = this.Width / 2;
-            v2.Width = this.Width / 2;
+            //v1.Width = this.Width / 2;
+            //v2.Width = this.Width / 2;
         }
 
-        private void CheckConnection(object _ip)
+        public void DelCamStream()
+        {
+            //normalTimer.;//.p.Abort();// = new Thread(normal_Tick);
+            //irTimer = null;//.Abort();// = new Thread(ir_Tick);
+
+
+            
+            this.v1.Children.Clear();// ((mc[CamMode.IR] as VlcCamera).vlcPlayer);
+            this.v2.Children.Clear();// ((mc[CamMode.NORMAL] as VlcCamera).vlcPlayer);
+            Shutdown();
+
+        }
+
+    private void CheckConnection(object _ip)
         {
             Ping ping = new Ping();
             string ip = _ip as string;
@@ -118,13 +181,13 @@ namespace AIThermometer.Windows
                             }
                         }
                         isConnected = true;
-                        Console.WriteLine(ip + " Online; No. ");
+                        LogHelper.WriteLog(ip + " Online; No. ");
                         Thread.Sleep(500);
                     }
                     else
                     {
                         count++;
-                        Console.WriteLine(ip + " Offline, Ping count :" + count);
+                        LogHelper.WriteLog(ip + " Offline, Ping count :" + count);
 
                         if (count >= 5)
                         {
@@ -152,27 +215,27 @@ namespace AIThermometer.Windows
 
         private void StreamError(object sender, EventArgs e)
         {
-            var vmp = sender as VlcMediaPlayer;
-            Console.WriteLine("Stream Error URL : " + vmp.GetMedia().TrackID);
-            Console.WriteLine("Stream Error Mode : " + vmp.GetMedia().TrackNumber);
-            //vmp.Play(new Uri(vmp.GetMedia().TrackID));
-            CamMode cm = (CamMode)Enum.Parse(typeof(CamMode), vmp.GetMedia().TrackNumber);
-            RePlayMedia(cm, vmp.GetMedia().TrackID);
+            //
         }
 
         private void RePlayMedia(CamMode cm, string url)
         {
-            Console.WriteLine(cm + " stream will be restarting, path:" + url);
+            LogHelper.WriteLog(cm + " stream will be restarting, path:" + url);
 
             multiPlayer[cm].SetLibPath(AIThermometerAPP.Instance().AppPath());
             if (url == "")
                 multiPlayer[cm].SetMode(cm);
             multiPlayer[cm].Init();
-            Console.WriteLine("key={0},value={1}", cm, multiPlayer[cm].GetPath());
+            LogHelper.WriteLog("first start "+ cm + " rstp, value="+ multiPlayer[cm].GetPath());
             multiPlayer[cm].Player().OnMediaPlayerBuffering(0.02f);
             multiPlayer[cm].Player().Play(new Uri(multiPlayer[cm].GetPath()));
             multiPlayer[cm].Player().GetMedia().TrackID = multiPlayer[cm].GetPath();
             multiPlayer[cm].Player().GetMedia().TrackNumber = multiPlayer[cm].GetMode().ToString();
+            multiPlayer[cm].Player().Playing += playing;
+            multiPlayer[cm].Player().Buffering += buffering;
+            multiPlayer[cm].Player().EncounteredError += StreamError;
+            RefreshView();
+
 
             /*
             if (cm == CamMode.IR)
@@ -187,34 +250,170 @@ namespace AIThermometer.Windows
 
         }
 
+        void normal_Tick()
+        {
+            while (true)
+            {
+                lock (lockn)
+                {
+                    if (normalNeedReset++ > video_timeout)
+                    {
+                        try
+                        {
+                            //multiPlayer[CamMode.NORMAL].Init();
+                            LogHelper.WriteLog("key= " + CamMode.NORMAL + "value=" + multiPlayer[CamMode.NORMAL].GetPath());
+                            multiPlayer[CamMode.NORMAL].Player().OnMediaPlayerBuffering(0.02f);
+                            multiPlayer[CamMode.NORMAL].Player().Play(new Uri(multiPlayer[CamMode.NORMAL].GetPath()));
+                            multiPlayer[CamMode.NORMAL].Player().GetMedia().TrackID = multiPlayer[CamMode.NORMAL].GetPath();
+                            multiPlayer[CamMode.NORMAL].Player().GetMedia().TrackNumber = multiPlayer[CamMode.NORMAL].GetMode().ToString();
+
+                            LogHelper.WriteLog("Need Reset");
+                            normalNeedReset = 0;
+                            normalTimer.Suspend();//...Stop();
+                        }
+                        catch (Exception ex)
+                        {
+                            LogHelper.WriteLog("normaltimer stop error", ex);
+                        }
+                    }
+                    else
+                    {
+                        LogHelper.WriteLog("tick normal count : " + normalNeedReset.ToString());
+                        Console.WriteLine("tick normal count : " + irNeedReset.ToString());
+
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+        }
+
+        void ir_Tick()
+        {
+            while (true)
+            {
+                lock (locki)
+                {
+                    if (irNeedReset++ > video_timeout)
+                    {
+                        try
+                        {
+                            //multiPlayer[CamMode.NORMAL].Init();
+                            LogHelper.WriteLog("key= " + CamMode.IR + " value=" + multiPlayer[CamMode.IR].GetPath());
+                            multiPlayer[CamMode.IR].Player().OnMediaPlayerBuffering(0.02f);
+                            multiPlayer[CamMode.IR].Player().Play(new Uri(multiPlayer[CamMode.IR].GetPath()));
+                            multiPlayer[CamMode.IR].Player().GetMedia().TrackID = multiPlayer[CamMode.IR].GetPath();
+                            multiPlayer[CamMode.IR].Player().GetMedia().TrackNumber = multiPlayer[CamMode.IR].GetMode().ToString();
+
+                            LogHelper.WriteLog("ir Need Reset");
+                            irTimer.Suspend();//...Stop();
+                            irNeedReset = 0;
+                            //irTimer.Stop();
+                        }
+                        catch(Exception ex)
+                        {
+                            LogHelper.WriteLog("irtimer stop error", ex);
+                        }
+                    }
+                    else
+                    {
+                        LogHelper.WriteLog("tick ir count : " + irNeedReset.ToString());
+                        Console.WriteLine("tick ir count : " + irNeedReset.ToString());
+                    }
+                }
+                Thread.Sleep(1000);
+
+            }
+        }
 
 
 
-     
         private void playing(object sender, EventArgs e)
         {
-            var aa = sender as VlcMediaPlayer;
-            //Console.WriteLine(" play " + this.vlcPlayer.SourceProvider.MediaPlayer.State);
-            //Console.WriteLine("[P] - StreamingVideo -  aaaaaaaaa REACHED + " + DateTime.Now);
+            var vmp = sender as VlcMediaPlayer;
+            //LogHelper.WriteLog("Stream Error Mode : " + vmp.GetMedia().TrackNumber);
+            //vmp.Play(new Uri(vmp.GetMedia().TrackID));
+
+            // Get cammode
+            CamMode cm = (CamMode)Enum.Parse(typeof(CamMode), vmp.GetMedia().TrackNumber);
+            if (cm == CamMode.NORMAL)
+            {
+                LogHelper.WriteLog("Stream ok URL : " + vmp.GetMedia().TrackID );
+                LogHelper.WriteLog("-------------------"+normalTimer.ThreadState);
+                try
+                {
+                    if (normalTimer.ThreadState != ThreadState.Unstarted)
+                        normalTimer.Suspend();//.Stop();
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.WriteLog("normal Timer error : ", ex);
+                }
+                normalNeedReset = 0;
+            }
+            else
+            {
+                LogHelper.WriteLog("Stream ir ok URL : " + vmp.GetMedia().TrackID);
+                //irTimer.Stop();
+                try
+                {
+                    if (normalTimer.ThreadState != ThreadState.Unstarted)
+                        irTimer.Suspend();//.Stop();
+                }
+                catch(Exception ex)
+                {
+                    LogHelper.WriteLog("ir Timer error :", ex);
+                }
+                irNeedReset = 0;
+            }
         }
         private void stoping(object sender, EventArgs e)
         {
-            Console.WriteLine("stop ");
-            //Console.WriteLine("[P] - StreamingVideo -  aaaaaaaaa REACHED + " + DateTime.Now);
+            LogHelper.WriteLog("stop ");
+            //LogHelper.WriteLog("[P] - StreamingVideo -  aaaaaaaaa REACHED + " + DateTime.Now);
         }
         private void opening(object sender, EventArgs e)
         {
-            //Console.WriteLine("opening " + this.vlcPlayer.SourceProvider.MediaPlayer.State);
-            //Console.WriteLine("[P] - StreamingVideo -  aaaaaaaaa REACHED + " + DateTime.Now);
+            //LogHelper.WriteLog("opening " + this.vlcPlayer.SourceProvider.MediaPlayer.State);
+            //LogHelper.WriteLog("[P] - StreamingVideo -  aaaaaaaaa REACHED + " + DateTime.Now);
         }
         private void buffering(object sender, EventArgs e)
         {
-            Console.WriteLine("buffering ");
-            //Console.WriteLine("[P] - StreamingVideo -  aaaaaaaaa REACHED + " + DateTime.Now);
+            var vmp = sender as VlcMediaPlayer;
+            //LogHelper.WriteLog("Stream Error Mode : " + vmp.GetMedia().TrackNumber);
+            //vmp.Play(new Uri(vmp.GetMedia().TrackID));
+
+            // Get cammode
+            try {
+                CamMode cm = (CamMode)Enum.Parse(typeof(CamMode), vmp.GetMedia().TrackNumber);
+                if (cm == CamMode.NORMAL)
+                {
+                    LogHelper.WriteLog("Stream buff URL : " + vmp.GetMedia().TrackID);
+                    if (normalTimer.ThreadState == ThreadState.Unstarted)
+                        normalTimer.Start();
+                    else if (normalTimer.ThreadState == ThreadState.Suspended)
+                        normalTimer.Resume();
+                }
+                else
+                {
+                    if (irTimer.ThreadState == ThreadState.Unstarted)
+                        irTimer.Start();
+                    else if (irTimer.ThreadState == ThreadState.Suspended)
+                        irTimer.Resume();
+                    //irTimer.Start();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteLog("buffering error ", ex);
+            }
+            //RePlayMedia(cm, vmp.GetMedia().TrackID);
+
+            //normalNeedReset
+            //LogHelper.WriteLog("[P] - StreamingVideo -  aaaaaaaaa REACHED + " + DateTime.Now);
         }
         private void vlc_MediaPlayerEncounteredError(object sender, EventArgs e)
         {
-            //Console.WriteLine("error " + this.vlcPlayer.SourceProvider.MediaPlayer.State);
+            //LogHelper.WriteLog("error " + this.vlcPlayer.SourceProvider.MediaPlayer.State);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -249,6 +448,9 @@ namespace AIThermometer.Windows
             v1.Width = 0;
             v2.Visibility = Visibility.Visible;
             v2.Width = this.Width;
+            
+            
+            //.vlcPlayer.Height = this.Height;
 
             RefreshView();
 
@@ -261,6 +463,7 @@ namespace AIThermometer.Windows
             v1.Width = this.Width;
             v2.Visibility = Visibility.Hidden;
             v2.Width = 0;
+            
             RefreshView();
 
         }
@@ -272,13 +475,36 @@ namespace AIThermometer.Windows
             v1.Width = this.Width / 2;
             v2.Visibility = Visibility.Visible;
             v2.Width = this.Width / 2;
+            
+
+
             RefreshView();
 
         }
 
         private void RefreshView()
         {
+            if (multiPlayer.Count != 2)
+                return;
 
-        }
+            switch (viewState)
+            {
+                case ViewState.NORMAL:
+                    multiPlayer[CamMode.NORMAL].vlcPlayer.Width = this.Width;
+                    multiPlayer[CamMode.IR].vlcPlayer.Width = 0;
+                    break;
+                case ViewState.IR:
+                    multiPlayer[CamMode.NORMAL].vlcPlayer.Width = 0;
+                    multiPlayer[CamMode.IR].vlcPlayer.Width = this.Width;
+                    break;
+                case ViewState.BOTH:
+                    multiPlayer[CamMode.NORMAL].vlcPlayer.Width = this.Width / 2;
+                    multiPlayer[CamMode.IR].vlcPlayer.Width = this.Width / 2;
+                    break;
+                default:
+                    break;
+            }
+
+            }
     }
 }

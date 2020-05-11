@@ -34,10 +34,20 @@ namespace AIThermometer
             //loading_window.Close();
             NumInit();
             CheckMem();
-            ServerHelper.Instance().port = AIThermometerAPP.Instance().config.local_port;
-            ServerHelper.Instance().temp_limit = AIThermometerAPP.Instance().TempLimit();
-            ServerHelper.Instance().image_dir_path = AIThermometerAPP.Instance().WarningPath();
-            ServerHelper.Instance().Initialize();
+            try
+            {
+                ServerHelper.Instance().port = AIThermometerAPP.Instance().config.local_port;
+                //ServerHelper.Instance().temp_limit = AIThermometerAPP.Instance().TempLimit();
+                ServerHelper.Instance().image_dir_path = AIThermometerAPP.Instance().WarningPath();
+                ServerHelper.Instance().Initialize();
+                LogHelper.WriteLog("Http Server init ok");
+
+            }
+            catch (Exception e)
+            {
+                LogHelper.WriteLog("Http Server init error", e);
+            }
+            
 
         }
 
@@ -45,13 +55,56 @@ namespace AIThermometer
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
+            LogHelper.WriteLog("Language config loading start");
+            string language = AIThermometerAPP.Instance().config.language;
+
+            if (language == string.Empty || language == null)
+            {
+                //language = Thread.CurrentThread.CurrentCulture.Name == "zh-CN" ? "zh-CN" : "en-US";
+                switch (Thread.CurrentThread.CurrentCulture.Name)
+                {
+                    case "zh-CN":
+                        language = "zh-CN";
+                        break;
+                    case "en-US":
+                        language = "en-US";
+                        break;
+                    case "ja-JP":
+                        language = "ja-JP";
+                        break;
+                    case "ko-KR":
+                        language = "ko-KR";
+                        break;
+                    default:
+                        language = "en-US";
+                        break;
+                }
+            }
+
+            List<ResourceDictionary> dictionaryList = new List<ResourceDictionary>();
+            foreach (ResourceDictionary dictionary in Application.Current.Resources.MergedDictionaries)
+            {
+                dictionaryList.Add(dictionary);
+            }
+            string requestedCulture = string.Format(@"Resources\{0}.xaml", language);
+            ResourceDictionary resourceDictionary = dictionaryList.FirstOrDefault(d => d.Source.OriginalString.Equals(requestedCulture));
+            if (resourceDictionary == null)
+            {
+                requestedCulture = @"Resources\en-US.xaml";
+                resourceDictionary = dictionaryList.FirstOrDefault(d => d.Source.OriginalString.Equals(requestedCulture));
+            }
+            if (resourceDictionary != null)
+            {
+                Application.Current.Resources.MergedDictionaries.Remove(resourceDictionary);
+                Application.Current.Resources.MergedDictionaries.Add(resourceDictionary);
+            }
+            LogHelper.WriteLog("language config loading end");
 
         }
 
         private void Setup()
         {
-            Console.WriteLine("setup!!!!.");
-
+            LogHelper.WriteLog("setup start");
             if (!Common.FileExists(AIThermometerAPP.Instance().VlcPath())
                 || !Common.FileExists(AIThermometerAPP.Instance().VlcCorePath()))
             {
@@ -64,7 +117,7 @@ namespace AIThermometer
                 LocalSetting config = new LocalSetting();
                 string json = JsonHelper.ToJSON(config);
                 File.WriteAllText(AIThermometerAPP.Instance().SettingPath(), json);
-                Console.WriteLine("Cannot find local config file. Created it.");
+                LogHelper.WriteLog("Cannot find local config file. Created it.");
             }
             AIThermometerAPP.Instance().LoadConfigs();
 
@@ -74,7 +127,7 @@ namespace AIThermometer
                 cameras.Cameras = new List<CameraInfo>();
                 string json = JsonHelper.ToJSON(cameras);
                 File.WriteAllText(AIThermometerAPP.Instance().CameraPath(), json);
-                Console.WriteLine("Cannot find cameras.json file. Created it.");
+                LogHelper.WriteLog("Cannot find cameras.json file. Created it.");
             }
             AIThermometerAPP.Instance().LoadCameraConfigs();
 
@@ -85,23 +138,25 @@ namespace AIThermometer
                 Console.Write("Check " + c.Name + ":" + c.IP + " -- ");
                 try
                 {
-                    if (ping.Send(c.IP).Status == IPStatus.Success)
+                    if (ping.Send(c.IP, 2000).Status == IPStatus.Success)
                     {
-                        Console.WriteLine("ONLINE");
+                        LogHelper.WriteLog("ONLINE");
                         c.state = CamContectingState.ONLINE;
                     }
                     else
                     {
-                        Console.WriteLine("OFFLINE");
+                        LogHelper.WriteLog("OFFLINE");
                         c.state = CamContectingState.OFFLINE;
                     }
                 }
                 catch (PingException e)
                 {
-                    Console.WriteLine(e.Message);
+                    LogHelper.WriteLog(e.Message);
                     c.state = CamContectingState.ERROR;
                 }
             }
+            LogHelper.WriteLog("setup end");
+
 
         }
         private void NumInit()
@@ -129,8 +184,14 @@ namespace AIThermometer
 
         private void CheckMem()
         {
+            if (Directory.Exists(AIThermometerAPP.Instance().TmpPath()))
+            {
+                Common.ClearAllFiles(AIThermometerAPP.Instance().TmpPath());
+                
+            }
+            Common.CreateDir(AIThermometerAPP.Instance().TmpPath());
 
-            if (System.IO.Directory.Exists(AIThermometerAPP.Instance().WarningPath()))
+            if (Directory.Exists(AIThermometerAPP.Instance().WarningPath()))
             {
                 string[] directorieStrings = Directory.GetDirectories(AIThermometerAPP.Instance().WarningPath());
                 DateTime limit = DateTime.Now.AddDays(-AIThermometerAPP.Instance().config.clean_day);
@@ -140,7 +201,7 @@ namespace AIThermometer
                     DateTime ot = DateTime.ParseExact(folder_name, "yyMMdd", System.Globalization.CultureInfo.CurrentCulture);
                     if (DateTime.Compare(limit, ot) > 0)
                     {
-                        Console.WriteLine("删除过期文件");
+                        LogHelper.WriteLog("删除过期文件");
                         Common.ClearAllFiles(d);
                     }
                 }

@@ -47,15 +47,16 @@ namespace AIThermometer.Cores
         public List<MultiCam> cl;
 
         // s双视频流 红外+普通
-        private MultiCam mc;
+        
 
-        public bool CreateCameraStream(string name, string ip, StreamType stype)
+        public MultiCam CreateCameraStream(string name, string ip, StreamType stype)
         {
+            MultiCam mc = new MultiCam();
             var ir = GetCamStream(stype);
             var normal = GetCamStream(stype);
 
             if (ir == null || normal == null)
-                return false;
+                return null;
 
             // 生成ir流实例
             ir.SetMode(CamMode.IR);
@@ -73,9 +74,34 @@ namespace AIThermometer.Cores
 
             cl.Add(mc);
 
-            return true;
+            return mc;
 
         }
+
+        public void DelCamStream(string ip)
+        {
+            if (cl.Count <= 0)
+                return;
+            var mc = GetCameraByIP(ip);
+
+            foreach (var item in mc)
+            {
+                var vc = item.Value as VlcCamera;
+                
+                vc.vlcPlayer.Dispose();
+            }
+            foreach (var c in cl)
+            {
+
+                
+                if (c[CamMode.IR].GetIP() == ip)
+                {
+                    cl.Remove(c);
+                    return;
+                }
+            }
+        }
+    
 
         public static CamStream GetCamStream(StreamType stype)
         {
@@ -91,7 +117,7 @@ namespace AIThermometer.Cores
 
         public CameraFactory()
         {
-            mc = new MultiCam();
+            //mc = new MultiCam();
             cl = new List<MultiCam>();
         }
 
@@ -117,7 +143,7 @@ namespace AIThermometer.Cores
                 return null;
             foreach (var c in cl)
             {
-                if (c[0].GetName() == cn)
+                if (c[CamMode.IR].GetName() == cn)
                     return c;
             }
             return null;
@@ -129,7 +155,7 @@ namespace AIThermometer.Cores
                 return null;
             foreach (var c in cl)
             {
-                if (c[0].GetIP() == ci)
+                if (c[CamMode.IR].GetIP() == ci)
                     return c;
             }
             return null;

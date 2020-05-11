@@ -1,1 +1,1 @@
-{"Cameras":[{"Name":"Ai Camera","IP":"192.168.0.85","Date":"2020-03-07T11:45:09.6041529+08:00","state":0,"StreamType":0,"BlackCell-Temperature":"37","Report-URL":"http://192.168.0.112:11000/Report","DEVICE":"","Camera-Threshold":"37","Face-LimitSize":"2","Face-Score":"1.0"}]}
+{"Cameras":[{"Name":"AI Camera","IP":"192.168.0.85","Date":"2020-03-07T11:45:09.6041529+08:00","state":0,"StreamType":0,"BlackCell-Temperature":"37","Report-URL":"http://192.168.0.112:11000/Report","DEVICE":"","Camera-Threshold":"37","Face-LimitSize":"2","Face-Score":"1.0","Upgrade-Coefficient":"0.0"}]}

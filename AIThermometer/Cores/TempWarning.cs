@@ -9,7 +9,8 @@ using System.Threading;
 namespace AIThermometer.Cores
 {
     public struct TempMessage
-    {                                                                                               
+    {
+        public int id;                                                                        
         public string cam;
         public float temp;
         public string photo_path;
@@ -20,7 +21,7 @@ namespace AIThermometer.Cores
     public class TempWarning
     {
         // 报警温度队列
-        private Queue<TempMessage> temp_list;
+        private List<TempMessage> temp_list;
         // 报警温度队列长度
         private int length;
 
@@ -53,7 +54,14 @@ namespace AIThermometer.Cores
         public TempWarning(int len = 10)
         {
             this.length = len;
-            this.temp_list = new Queue<TempMessage>();
+            this.temp_list = new List<TempMessage>();
+        }
+
+        public void SetLength(int len)
+        {
+            this.length = len;
+            if (this.temp_list.Count - this.length > 0)
+                this.temp_list.RemoveRange(0, this.temp_list.Count - this.length);
         }
 
         public void SetEventHandler(AddedQueueEventHandler et)
@@ -67,13 +75,23 @@ namespace AIThermometer.Cores
         /// <param name="tm"></param>
         public void Push(TempMessage tm)
         {
+            foreach(var item in this.temp_list)
+            {
+                if (item.id == tm.id)
+                {
+                    this.temp_list.Remove(item);
+                    break;
+                }
+            }
+
             if (this.temp_list.Count() >= this.length)
                 Pop();
-            this.temp_list.Enqueue(tm);
+            this.temp_list.Add(tm);
 
             if (addedWarningInfo != null)
                 addedWarningInfo(tm);
 
+            // 用线程储存头像文件
             Thread t = new Thread(SaveImage);
             t.Start(tm);
         }
@@ -83,7 +101,7 @@ namespace AIThermometer.Cores
         /// </summary>
         public void Pop()
         {
-            this.temp_list.Dequeue();
+            this.temp_list.RemoveAt(0);
         }
 
         public int Count()
@@ -94,7 +112,7 @@ namespace AIThermometer.Cores
         private static void SaveImage(object obj)
         {
             TempMessage tm = (TempMessage)obj;
-            //Console.WriteLine("Method {0}!", obj.ToString());
+            //LogHelper.WriteLog("Method {0}!", obj.ToString());
 
             FileStream fs = new FileStream(tm.photo_path, FileMode.Create);
             fs.Write(tm.bytes, 0, tm.bytes.Length);

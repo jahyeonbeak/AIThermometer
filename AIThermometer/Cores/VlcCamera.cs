@@ -71,7 +71,7 @@ namespace AIThermometer.Cores
                 this.vlcPlayer.SourceProvider.MediaPlayer.Dispose();//.MediaPlayer.Stop();
                 this.vlcPlayer.SourceProvider.Dispose();
                 this.vlcPlayer.Dispose();
-                Console.WriteLine("dispose");
+                LogHelper.WriteLog("dispose");
             }
             catch
             {
@@ -136,12 +136,12 @@ namespace AIThermometer.Cores
             if (this.path == "127.0.0.1")
             {
                 if (this.mode == CamMode.NORMAL)
-                    this.path = AIThermometerAPP.Instance().AppPath() + "test.mp4";
+                    this.path = "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov";
                 else
                     this.path = AIThermometerAPP.Instance().AppPath() + "test.mp4";
                 //this.path = "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov";
 
-                Console.WriteLine("Local test mode! 127 0 0 1");
+                LogHelper.WriteLog("Local test mode! 127 0 0 1");
                 return;
             }
 

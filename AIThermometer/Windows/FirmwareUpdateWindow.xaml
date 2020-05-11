@@ -1,12 +1,13 @@
-﻿<Window x:Class="AIThermometer.Windows.SettingWindow"
+﻿<Window x:Class="AIThermometer.Windows.FirmwareUpdateWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AIThermometer.Windows"
         mc:Ignorable="d"
-        Title="SettingWindow" Height="450" Width="800" WindowStyle="None" BorderThickness="0" ResizeMode="NoResize">
-
+        Title="AddCameraWindow" Height="300" Width="442" WindowStyle="None" 
+        AllowsTransparency="True" Background="Transparent" 
+        OpacityMask="White" ResizeMode="NoResize">
     <Window.Resources>
 
         <Style TargetType="{x:Type TabItem}" >
@@ -135,63 +136,28 @@
         </Style>
 
     </Window.Resources>
-    <Grid Background="#222327">
-        <Grid.RowDefinitions  >
-            <RowDefinition Height="50"></RowDefinition>
-            <RowDefinition Height="*"></RowDefinition>
-            <RowDefinition Height="70"></RowDefinition>
-        </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
-        </Grid>
-        <Grid Grid.Row="1">
-            <!--<Grid.ColumnDefinitions>
-            </Grid.ColumnDefinitions>-->
-            <TabControl    Width="800" TabStripPlacement="Left" BorderThickness="0,0,0,0"  Background="#303238">
-                <TabItem  Header="{StaticResource sysSetting}"  >
-                    <Grid Background="#222327"  >
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*"></ColumnDefinition>
-                            <ColumnDefinition Width="2*"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <Label Content="{StaticResource sysIP}" FontSize="16" Foreground="#ffffff"  Grid.Column="0" HorizontalAlignment="Right" Margin="0,20,20,0" VerticalAlignment="Top" Height="30" ></Label>
-                        <Label Content="{StaticResource sysPort}" FontSize="16" Foreground="#ffffff"  Grid.Column="0" HorizontalAlignment="Right" Margin="0,60,20,0" VerticalAlignment="Top" Height="30" PreviewTextInput="tb_PreviewTextInput" InputMethod.IsInputMethodEnabled="False"></Label>
-                        <Label Visibility="Visible" Content="{StaticResource sysLanage}" FontSize="16" Foreground="#ffffff"  Grid.Column="0" HorizontalAlignment="Right" Margin="0,100,20,0" VerticalAlignment="Top" Height="30" PreviewTextInput="tb_PreviewTextInput" InputMethod.IsInputMethodEnabled="False"></Label>
-                        <TextBox  Width="220" Height="26" HorizontalAlignment="Left" Grid.Column="1" x:Name="ip" VerticalAlignment="Top" Margin="20,20,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0"></TextBox>
-                        <TextBox  Width="220" Height="26" HorizontalAlignment="Left" Grid.Column="1" x:Name="port" VerticalAlignment="Top" Margin="20,60,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" PreviewTextInput="tb_PreviewTextInput" InputMethod.IsInputMethodEnabled="False"></TextBox>
-                        <ComboBox Visibility="Visible" Grid.Column="1" x:Name="lanageCombo" HorizontalAlignment="Left" Margin="20,105,0,0" VerticalAlignment="Top" Width="120" Background="#303238" Style="{DynamicResource ComboBoxStyle}" Height="24" DisplayMemberPath="value" SelectedValuePath="key">
-
-                        </ComboBox>
-                        <Label Visibility="Hidden" Content="{StaticResource autoconnect}" FontSize="16" Foreground="#ffffff"  Grid.Column="0" HorizontalAlignment="Right" Margin="0,140,20,0" VerticalAlignment="Top" Height="30" PreviewTextInput="tb_PreviewTextInput" InputMethod.IsInputMethodEnabled="False"/>
-                        <CheckBox x:Name="autoconCheckBox" Visibility="Hidden" Grid.Column="1" HorizontalAlignment="Left" Margin="25,150,0,0" VerticalAlignment="Top"/>
-                    </Grid>
-                </TabItem>
-                <TabItem  Header="{StaticResource warnSetting}"  BorderThickness="0" >
-                    <Grid Background="#222327" >
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*"></ColumnDefinition>
-                            <ColumnDefinition Width="2*"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <Label Content="{StaticResource warnNumber}" FontSize="16" Foreground="#ffffff"  Grid.Column="0" HorizontalAlignment="Right" Margin="0,20,20,0" VerticalAlignment="Top" Height="30" ></Label>
-                        <Label Content="{StaticResource warnTemp}" FontSize="16" Foreground="#ffffff"  Grid.Column="0" HorizontalAlignment="Right" Margin="0,60,20,0" VerticalAlignment="Top" Height="30" ></Label>
-                        <TextBox  Width="220" Height="26" HorizontalAlignment="Left" Grid.Column="1" x:Name="warn_number" VerticalAlignment="Top" Margin="20,20,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" PreviewTextInput="tb_PreviewTextInput" InputMethod.IsInputMethodEnabled="False"></TextBox>
-                        <TextBox  Width="220" Height="26" HorizontalAlignment="Left" Grid.Column="1" x:Name="threshold" VerticalAlignment="Top" Margin="20,60,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" PreviewTextInput="tb_PreviewTextInputFloat" InputMethod.IsInputMethodEnabled="False"></TextBox>
-                        <Label Content="{StaticResource warnSaveDay}" FontSize="16" Foreground="#ffffff"  Grid.Column="0" HorizontalAlignment="Right" Margin="0,100,20,0" VerticalAlignment="Top" Height="30" />
-                        <TextBox  Width="220" Height="26" HorizontalAlignment="Left" Grid.Column="1" x:Name="clean_day" VerticalAlignment="Top" Margin="20,100,0,0" Background="#141517" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" PreviewTextInput="tb_PreviewTextInputFloat" InputMethod.IsInputMethodEnabled="False"/>
-                    </Grid>
-                </TabItem>
+    <Grid Background="Transparent">
+        <Border BorderThickness="0" CornerRadius="4,4,4,4"    Background="#222327">
+            <Grid>
+                <Label Content="Firmware Upgrade" x:Name="title" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,10,0,0" FontSize="16"  Foreground="#ffffff"/>
+                <!--<Button HorizontalAlignment="Right" VerticalAlignment="Top" Height="15" Width="15" Margin="0,20,20,0" BorderThickness="0">
+                    <Button.Background>
+                        <ImageBrush ImageSource="/image/close.png"></ImageBrush>
+                    </Button.Background>
+                </Button>-->
+                <RadioButton x:Name="fileRadio" Click="radioButton_Click" Content="From File" IsChecked="True" GroupName="option" Width="180" Height="26" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="210,50,0,0"  Background="WhiteSmoke" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" IsEnabled="True"/>
+                <RadioButton x:Name="memRadio" Click="radioButton_Click" Content="From Memory"  GroupName="option" Width="180" Height="26" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,50,0,0"  Background="WhiteSmoke" Foreground="#ffffff" VerticalContentAlignment="Center" BorderThickness="0" IsEnabled="True"/>
 
 
-            </TabControl>
-
-
-        </Grid>
-
-        <Grid Grid.Row="2">
-            <Label x:Name="app_version" Content="Version" FontSize="13" Foreground="#FFA0A0A0" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom" Height="30"/>
-            <Button x:Name="cancel" Content="{StaticResource cancelButton}" HorizontalAlignment="Right" Width="85" Height="30" Margin="0,0,130,20" VerticalAlignment="Bottom" Click="Cancel_Click" Background="#FF404145" FontSize="14" Foreground="White" Style="{DynamicResource MyButton}" />
-            <Button x:Name="confirm" Content="{StaticResource okButton}" HorizontalAlignment="Right" Width="85" Height="30" Margin="0,0,20,20" VerticalAlignment="Bottom" Click="okButton_Click" Background="#FF1890FF" FontSize="14" Foreground="White" Style="{DynamicResource MyButton}"/>
-        </Grid>
-
-
+                <Label Height="2" Width="442" Background="#313238" VerticalAlignment="Top" Margin="0,50"></Label>
+                <Label HorizontalAlignment="Right" HorizontalContentAlignment="Right" Content="Firmware Version :" VerticalAlignment="Top" Margin="0,80,250,0" FontSize="14" Foreground="#ffffff"/>
+                <ComboBox Visibility="Visible" x:Name="versionCombo" HorizontalAlignment="Left" Margin="210,80,0,0" VerticalAlignment="Top" Width="180" Background="#303238" Style="{DynamicResource ComboBoxStyle}" Height="26" DisplayMemberPath="value" SelectedValuePath="key">
+                </ComboBox>
+                <Button x:Name="cancel" Content="{StaticResource cancelButton}" HorizontalAlignment="Right" Width="75" Height="30" Margin="0,0,114,30" VerticalAlignment="Bottom" Click="Cancel_Click" Background="#FF404145" FontSize="14" Foreground="White" Style="{DynamicResource MyButton}"/>
+                <Button x:Name="confirm" Content="{StaticResource okButton}" HorizontalAlignment="Right" Width="75" Height="30" Margin="0,0,19,30" VerticalAlignment="Bottom" Click="okButton_Click" Background="#FF1890FF" FontSize="14" Foreground="White" Style="{DynamicResource MyButton}"/>
+                <Label Content="Upgrade File Path :" HorizontalAlignment="Right" HorizontalContentAlignment="Right" VerticalAlignment="Top" Margin="0,120,250,0" FontSize="14" Foreground="#ffffff"/>
+                <Button x:Name="openFileButton" Content="File" HorizontalAlignment="Right" Width="180" Height="30" Margin="0,0,52,151" VerticalAlignment="Bottom" Click="FilePath_Click" Background="#FF404145" FontSize="14" Foreground="White" Style="{DynamicResource MyButton}"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

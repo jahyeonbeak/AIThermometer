@@ -24,16 +24,16 @@
         </Grid>
         <Grid Height="65" Grid.Row="1">
             <Label Height="1" x:Name="label1" Width="270" VerticalAlignment="Top" Background="#303238"></Label>
-            <Button x:Name="contectButton" Click="contectButton_Click"  Height="30" Width="75" Background="#3f4044" Margin="120,18,128,17" Style="{DynamicResource MyButton}">
-                <WrapPanel Height="30" Width="75">
-                    <Image Height="20" Width="20" Margin="5,5" Source="/image/duan.png"/>
-                    <TextBlock TextWrapping="Wrap" Text="断开" Width="40" FontSize="14" VerticalAlignment="Center" Padding="5,0,0,0" Foreground="#ffffff"/>
+            <Button x:Name="contectButton" Click="contectButton_Click"  Height="30" Width="120" Background="#3f4044" Margin="20,18,115,17" Style="{DynamicResource MyButton}">
+                <WrapPanel Height="30" Width="120">
+                    <Image x:Name="imageButton" Height="20" Width="20" Margin="5,5" Source="/image/duan.png"/>
+                    <TextBlock x:Name="connectLabel" TextWrapping="Wrap" Width="80" FontSize="14" VerticalAlignment="Center" Padding="5,0,0,0" Foreground="#ffffff"/>
                 </WrapPanel>
             </Button>
-            <Button  Height="30" x:Name="update" Width="75" Background="#1890ff" Margin="221,18,27,17" Click="Update_Click" Style="{DynamicResource MyButton}">
-                <WrapPanel Height="30" Width="75">
+            <Button  Height="30" x:Name="update" Width="120" Background="#1890ff" Margin="190,18,10,17" Click="Update_Click" Style="{DynamicResource MyButton}">
+                <WrapPanel Height="30" Width="120">
                     <Image Height="20" Width="20" Margin="5,5" Source="/image/repair.png"/>
-                    <TextBlock TextWrapping="Wrap" Text="修改" Width="40" FontSize="14" VerticalAlignment="Center" Padding="5,0,0,0"  Foreground="#ffffff"/>
+                    <TextBlock TextWrapping="Wrap" Text="{StaticResource update}" Width="80" FontSize="14" VerticalAlignment="Center" Padding="5,0,0,0"  Foreground="#ffffff"/>
                 </WrapPanel>
             </Button>
 

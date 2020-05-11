@@ -35,9 +35,10 @@ namespace AIThermometer.Windows
         private float _rightdown_pos_y;
         private float _pos_margin = 10;
         private string request_ip = "";
+        private string pos_json = "";
         Point startPoint = new Point();
 
-        HttpRequestHelper http_request = new HttpRequestHelper();
+        //HttpRequestHelper http_request = new HttpRequestHelper();
 
 
         public BlackCellSettingWindow(string path, string ip)
@@ -53,20 +54,28 @@ namespace AIThermometer.Windows
 
         public bool Init()
         {
+            /*
             string location_json = "";
             // Http get
             //location_json = HttpRequestHelper.HttpGet1("http://192.168.0.119:9300/config");
             //location_json = http_request.HttpGet("http://192.168.0.119:9300/config", "");
-                location_json = http_request.HttpGet("http://" + request_ip + ":9300/config", "");
+            location_json = http_request.HttpGet("http://" + request_ip + ":9300/config", "");
             
             if (location_json == "")
                 return false;
-            //Console.WriteLine("fffff"+location_json);
+            //LogHelper.WriteLog("fffff"+location_json);
             // test_string
             cr = JsonHelper.FromJSON<CameraResponse>(location_json);
             //  MessageBox.Show(cr.SavedParams.Camera_IP);
-
-            if (!Common.FileExists(AIThermometerAPP.Instance().CameraPath()))
+            */
+            cr = new CameraResponse();// .SavedParams.BlackCell_Position[0] = Leftup_Pos_X;
+            cr.SavedParams = new CameraSavedParams();
+            cr.SavedParams.BlackCell_Position = new List<float>();
+            cr.SavedParams.BlackCell_Position.Add(0.0f);
+            cr.SavedParams.BlackCell_Position.Add(0.0f);
+            cr.SavedParams.BlackCell_Position.Add(0.0f);
+            cr.SavedParams.BlackCell_Position.Add(0.0f);
+            if (!Common.FileExists(file_path))
                 return false;
 
             using (FileStream fs = new FileStream(file_path, FileMode.Open, FileAccess.Read)) //将图片以文件流的形式进行保存
@@ -83,10 +92,10 @@ namespace AIThermometer.Windows
 
 
 
-                Leftup_Pos_X = cr.SavedParams.BlackCell_Position[0];
-                Leftup_Pos_Y = cr.SavedParams.BlackCell_Position[1];
-                Rightdown_Pos_X = cr.SavedParams.BlackCell_Position[2];
-                Rightdown_Pos_Y = cr.SavedParams.BlackCell_Position[3];
+                //Leftup_Pos_X = cr.SavedParams.BlackCell_Position[0];
+                //Leftup_Pos_Y = cr.SavedParams.BlackCell_Position[1];
+               // Rightdown_Pos_X = cr.SavedParams.BlackCell_Position[2];
+               // Rightdown_Pos_Y = cr.SavedParams.BlackCell_Position[3];
 
                 float lx = (float)(image_width * Leftup_Pos_X);// cr.SavedParams.BlackCell_Position[0]);
                 float ly = (float)(image_height * Leftup_Pos_Y);// cr.SavedParams.BlackCell_Position[1]);
@@ -108,11 +117,7 @@ namespace AIThermometer.Windows
                 canvas.Children.Add(rect);
                 return true;
             }
-            {
-                ErrorWindow ew = new ErrorWindow("错误", "获得黑体坐标错误");
-                ew.ShowDialog();
-                return false;
-            }
+            
         }
 
         private void okButton_Click(object sender, RoutedEventArgs e)
@@ -129,31 +134,10 @@ namespace AIThermometer.Windows
 
             //HttpRequestHelper fff = new HttpRequestHelper();
             //fff.HttpPost("http://192.168.0.85:9300/config", json,ref a);
-            Console.WriteLine(json);
+            LogHelper.WriteLog(json);
 
-
-            var formDatas = new List<FormItemModel>();
-
-            //添加文本
-            formDatas.Add(new FormItemModel()
-            {
-                Key = "BlackCell-Position",
-                Value = json // "id-test-id-test-id-test-id-test-id-test-"
-            });
-
-            //提交表单
-            try
-            {
-                AIThermometerAPP.Instance().blackcell_pos_error = true;
-                var result = FormPost.PostForm("http://" + this.request_ip + ":9300/config", formDatas);
-                AIThermometerAPP.Instance().ResetBlackCell();
-                DialogResult = true;
-
-            }
-            catch (Exception ex)
-            {
-                DialogResult = false;
-            }
+            this.pos_json = json;
+            DialogResult = true;
 
         }
 
@@ -175,6 +159,8 @@ namespace AIThermometer.Windows
             x35, y145,  x45, y155
             500  200    500  200
         */
+
+        public string POSJSON { get { return pos_json; } set { pos_json = value; } }
 
         public float Leftup_Pos_X { get { return _leftup_pos_x; } set { _leftup_pos_x = value; } }
 
@@ -221,7 +207,7 @@ namespace AIThermometer.Windows
             Rightdown_Pos_X = (float)(rx / image_width);
             Rightdown_Pos_Y = (float)(ry / image_height);
 
-            Console.WriteLine(Leftup_Pos_X + "," + Leftup_Pos_Y + "   " + Rightdown_Pos_X + "," + Rightdown_Pos_Y);
+            LogHelper.WriteLog(Leftup_Pos_X + "," + Leftup_Pos_Y + "   " + Rightdown_Pos_X + "," + Rightdown_Pos_Y);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
